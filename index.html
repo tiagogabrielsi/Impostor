@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Impostor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-container">
+        <div id="screen-setup" class="screen active">
+            <div class="header-icon">🕵️</div>
+            <h1>Quem é o Impostor?</h1>
+            
+            <div class="glass-panel">
+                <label>Jogadores</label>
+                <div id="player-list"></div>
+                <div class="row-buttons">
+                    <button class="btn-small add" onclick="addPlayer()">+</button>
+                    <button class="btn-small remove" onclick="removePlayer()">-</button>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                
+                <div class="option-group">
+                    <label>Modo de Jogo</label>
+                    <select id="game-mode" onchange="updateGameModeUI()">
+                        <option value="classic">🕵️ Clássico (Impostor sabe)</option>
+                        <option value="mystery">❓ Mistério (Ninguém sabe)</option>
+                    </select>
+                </div>
+
+                <div class="row-split">
+                    <div class="option-group">
+                        <label>Impostores</label>
+                        <select id="impostor-count" onchange="validateRoles('impostor')">
+                            <option value="1">1</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group" id="div-inspector-count" style="display:none;">
+                        <label>Inspetor</label>
+                        <select id="inspector-count" onchange="validateRoles('inspector')">
+                            <option value="0">0</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label>Tempo de Debate</label>
+                    <select id="game-timer">
+                        <option value="60">1 min</option>
+                        <option value="120">2 min</option>
+                        <option value="180" selected>3 min</option>
+                        <option value="0">Sem Tempo (Livre)</option>
+                    </select>
+                </div>
+
+                <div id="div-hint-toggle" class="toggle-container">
+                    <span class="toggle-label">Dica para Impostores?</span>
+                    <label class="switch">
+                        <input type="checkbox" id="impostor-tip">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="option-group">
+                    <label>Pacote de Palavras</label>
+                    <select id="category-select">
+                        <option value="Animais">🦁 Animais</option>
+                        <option value="Cozinha">🍳 Cozinha</option>
+                        <option value="Lugares">🌍 Lugares</option>
+                        <option value="Profissoes">💼 Profissões</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button class="btn-primary pulse" onclick="startGame()">INICIAR JOGO</button>
+        </div>
+
+        <div id="screen-reveal" class="screen">
+            <h2>Vez de:</h2>
+            <h1 id="current-player-name" class="highlight-text">Jogador X</h1>
+            <p class="subtitle">Passe o dispositivo para este jogador</p>
+            
+            <div class="card-container" onclick="revealRole()">
+                <div class="card" id="game-card">
+                    <div class="card-front">
+                        <span class="icon">👆</span>
+                        <p>Toque para revelar</p>
+                    </div>
+                    <div class="card-back">
+                        <div id="role-content">
+                            <div id="player-role">FUNÇÃO</div>
+                            <div id="player-word">PALAVRA</div>
+                        </div>
+                        <p class="hide-hint">Toque para esconder</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="next-player-btn" class="btn-primary" onclick="nextPlayer()" disabled>Próximo</button>
+        </div>
+
+        <div id="screen-timer" class="screen">
+            <h2>Debate</h2>
+            <div class="timer-circle">
+                <span id="timer-display">03:00</span>
+            </div>
+            <p class="animate-pulse">Discutam!</p>
+            <button class="btn-danger" onclick="finishVoting()">Votação Imediata</button>
+        </div>
+
+        <div id="screen-vote" class="screen">
+            <h2>Quem é o suspeito?</h2>
+            <div id="voting-buttons" class="grid-buttons"></div>
+        </div>
+
+        <div id="screen-guess" class="screen">
+            <div class="glass-panel" style="border-color: #8b5cf6;">
+                <h2 style="color: #8b5cf6; margin-bottom: 10px;">Inspetor Pego!</h2>
+                <p style="font-size: 0.9rem;">Se ele adivinhar a palavra secreta, os vilões vencem.</p>
+                
+                <input type="text" id="inspector-guess-input" class="player-input" placeholder="Digite a palavra..." style="margin-top: 20px; background: rgba(0,0,0,0.5);">
+                
+                <button class="btn-primary" onclick="checkInspectorGuess()" style="background: #8b5cf6; margin-top: 15px;">Tentar Adivinhar</button>
+            </div>
+        </div>
+
+        <div id="screen-round-end" class="screen">
+            <div id="round-box" class="winner-box"> 
+                <h1 id="round-title">...</h1>
+                <p id="round-message">...</p>
+            </div>
+            <div class="glass-panel">
+                <h2 id="remaining-info" style="text-align: center; font-size: 1.1rem; color: white;">...</h2>
+                <p style="text-align: center; font-size: 0.8rem; margin-top: 10px; opacity: 0.7;">Clique abaixo para continuar</p>
+            </div>
+            <button class="btn-primary" onclick="startNextRound()">Continuar Caçada</button>
+        </div>
+
+        <div id="screen-result" class="screen">
+            <div class="result-card">
+                <h1 id="result-title">VENCEDOR</h1>
+                <p id="result-message">Resultado</p>
+            </div>
+            <div class="glass-panel info-panel">
+                <p>Palavra: <strong id="final-word" style="color:var(--accent)">X</strong></p>
+                <p>Vilões: <strong id="final-impostor" style="color:var(--danger)">Y</strong></p>
+            </div>
+            <button class="btn-primary" onclick="resetGame()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
